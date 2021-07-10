@@ -1,6 +1,7 @@
 import React from 'react'
+import ReactDOM from 'react-dom';
 import * as faceapi from 'face-api.js'
-
+import Emoji from './emoji'
 import expressionsMap from '../util/expressions-map'
 
 import './webcan.css'
@@ -8,11 +9,22 @@ import './webcan.css'
 export default class Webcan extends React.Component{
 
     constructor(props){
-        super(props);
-        this.videoRef = React.createRef();
-        this.canvasRef = React.createRef();
-        this.displaySize = {width: 0, height: 0};
-        this.lang = 'pt';
+        super(props)
+        this.videoRef = React.createRef()
+        this.canvasRef = React.createRef()
+        this.displaySize = {width: 0, height: 0}
+        this.lang = 'pt'
+        this.history = []
+        this.emojiContainerRef = React.createRef()
+        this.emojiContainerTmpRef = React.createRef()
+    }
+
+    appendHistory = (historyObj)=>{
+        const lastHistoryObj = this.getLastHistoryObj()
+        if (lastHistoryObj == null || lastHistoryObj.mood != historyObj.mood || historyObj.time > (lastHistoryObj.time + 1000*4) ){
+            this.history.push(historyObj)
+            this.forceUpdate()
+        }
     }
 
     componentDidMount = ()=>{
@@ -44,6 +56,34 @@ export default class Webcan extends React.Component{
         console.log('O usuário negou acesso a webcan ou o computador não possui este dispositivo.')
     }
 
+    getEmojiComponent = (historyObj)=>{
+        let map = expressionsMap[historyObj.mood]
+        if (map){
+            return <Emoji key={historyObj.time} icon={map.icon} label={map[this.lang]} color={map.color}/>
+        }
+        return  null
+    }
+    
+    getLastHistoryObj = ()=>{
+        if (this.history.length <= 0) return null
+        return this.history[this.history.length - 1]
+    }
+
+    getMoodList = ()=>{
+        const maxItems = 10
+        const history = [];
+        const historyParts = this.history.slice(Math.max(this.history.length - maxItems, 0)); //
+        for (let index in historyParts){
+            const historyObj = historyParts[index];
+            let map = expressionsMap[historyObj.mood]
+            if (map){
+                history.push(<Emoji key={historyObj.time} icon={map.icon} label={map[this.lang]} color={map.color}/>)
+            }
+        }
+
+        return history
+    }
+
     init = ()=>{
         return Promise.all([
             faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
@@ -63,7 +103,7 @@ export default class Webcan extends React.Component{
                 //if (mood != 'neutral'){
                     if (value > max){
                         max = value;
-                        currentMood = expressionsMap[mood][this.lang]
+                        currentMood = mood
                     }
                 // }
                 // else{
@@ -72,7 +112,14 @@ export default class Webcan extends React.Component{
             }
         }
         
-        if(currentMood) console.log(currentMood, parseInt(max), parseInt(neutralValue));
+        const historyObj = {
+            time: Date.now(),
+            mood: currentMood,
+            data: expressions
+        }
+
+        this.appendHistory(historyObj)
+        //if(currentMood) console.log(currentMood, parseInt(max), parseInt(neutralValue));
         return currentMood
     }
 
@@ -86,10 +133,15 @@ export default class Webcan extends React.Component{
     render = ()=>{
 
         return (
+            <>
             <div className="webcan-container">
                 <video className="mirror" ref={this.videoRef} autoPlay={true} muted></video>
                 <canvas className="mirror" ref={this.canvasRef}></canvas>
+                <div className="emoji-container" ref={this.emojiContainerRef}>
+                    {this.getMoodList()}
+                </div>
             </div>
+            </>
         )
     }
 
@@ -108,6 +160,6 @@ export default class Webcan extends React.Component{
 
         setTimeout(()=>{
             this.startAnalyser()
-        }, 100)
+        }, 300)
     }
 }

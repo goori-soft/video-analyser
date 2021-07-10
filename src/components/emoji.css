@@ -1,0 +1,36 @@
+@keyframes flowup{
+    from{
+        top: 110%;
+    }
+
+    to{
+        top: -20%;
+    }
+}
+
+.emoji{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 100%;
+    color: rgba(255, 255, 255, .5);
+    font-size: 40px;
+    min-width: 40px;
+    padding: 3px;
+    line-height: 40px;
+}
+
+.emoji-container{
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    min-width: 66px;
+    background-color:rgba(0, 0, 0, .7);
+}
+
+.emoji-container .emoji{
+    left: 10px;
+    position: absolute;
+    animation: flowup 7s ease-in forwards;
+}

@@ -9,14 +9,18 @@
     display: flex;
     overflow: hidden;
     
-    justify-content: center;
-    align-items: center;
+    justify-content: flex-end;
+    align-items: flex-end;
 }
 
 .webcan-container video{
     width: 100%;
     height: 100%;
     object-fit: cover;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    z-index: 0;
 }
 
 .webcan-container canvas{
@@ -31,4 +35,8 @@
     transform: rotateY(180deg);
     -webkit-transform:rotateY(180deg);
     -moz-transform:rotateY(180deg);
+}
+
+.emoji-container-tmp{
+    display: none;
 }
